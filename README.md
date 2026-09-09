@@ -1,19 +1,19 @@
-# ICMGP 2026 Android Wrapper
+# Ocean Conference Android Wrapper
 
 This repository builds the Android wrapper for the hosted attendee app:
 
-`https://icmgp-2026-app.vercel.app/`
+`https://ocean.ce22resch01004.workers.dev/`
 
 ## What this wrapper does
 
-- Keeps the full ICMGP attendee application inside the Android WebView.
+- Keeps the full conference attendee application inside the Android WebView.
 - Uses a secure Chrome Custom Tab only for Google sign-in, because Google blocks OAuth inside embedded WebViews.
-- After Google/Supabase finishes authentication, `oceanconference://auth/callback` reopens the Android app and the wrapper transfers the Supabase session into the WebView.
+- After Google/Supabase authentication completes, `oceanconference://auth/callback` returns control to the Android app and the wrapper transfers the Supabase session into the WebView.
 - Supports both Supabase implicit-token and PKCE-code OAuth returns.
-- Keeps profile, schedule, networking, chat, announcements, sponsors and other ICMGP app pages inside the APK.
+- Keeps profile, schedule, networking, chat, announcements, sponsors and other app pages inside the APK.
 - Supports camera permission for QR scanning.
 - Allows notification/message sounds from the webpage.
-- Uses an ICMGP-style ocean/mercury launcher icon and Android 12+ splash screen.
+- Uses the conference launcher icon and Android splash screen.
 
 ## Required Supabase setting
 
@@ -27,9 +27,9 @@ Make sure this exact URL exists:
 
 Keep the normal web app URL there too:
 
-`https://icmgp-2026-app.vercel.app/`
+`https://ocean.ce22resch01004.workers.dev/`
 
-Google Cloud itself should continue using the normal Supabase callback:
+Google Cloud should continue using the normal Supabase callback:
 
 `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
 
@@ -37,7 +37,7 @@ Do not add the Android custom scheme to Google Cloud; it belongs in Supabase Red
 
 ## Google login behavior
 
-Google's credential screen briefly appears in a Chrome Custom Tab. That is intentional and required for secure Google OAuth. When login finishes, the Custom Tab hands control back to the Android app. The attendee app itself should not remain open in Chrome.
+Google's credential screen briefly appears in a secure Chrome Custom Tab. That is required by Google. After login finishes, control returns automatically to the Android app; the conference content itself stays inside the APK.
 
 ## Build APK
 
@@ -54,5 +54,3 @@ Inside it is:
 ## Current application ID
 
 `com.blueplanet.conference`
-
-It is intentionally unchanged from earlier test APKs so this APK can update the already-installed test app rather than installing as a second application.
