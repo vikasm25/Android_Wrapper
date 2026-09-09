@@ -1,85 +1,58 @@
-# Ocean Conference Android Wrapper v2
+# ICMGP 2026 Android Wrapper
 
-This is a real Android Studio project that renders the hosted conference web app inside a secure WebView.
+This repository builds the Android wrapper for the hosted attendee app:
 
-## What is fixed in v2
+`https://icmgp-2026-app.vercel.app/`
 
-- Includes the missing GitHub Actions workflow: `.github/workflows/build-android-apk.yml`
-- Builds a signed debug APK that can be installed directly on Android phones
-- Loads the full hosted app, not a demo/preview copy
-- Handles camera permission for QR scanning
-- Allows in-app notification sounds
-- Opens Google OAuth in the system browser instead of the embedded WebView
-- Returns Google/Supabase authentication to the Android app using `oceanconference://auth/callback`
-- Opens Google Maps and external sponsor links outside the WebView
-- HTTPS-only network policy
+## What this wrapper does
 
-## Before building
+- Keeps the full ICMGP attendee application inside the Android WebView.
+- Uses a secure Chrome Custom Tab only for Google sign-in, because Google blocks OAuth inside embedded WebViews.
+- After Google/Supabase finishes authentication, `oceanconference://auth/callback` reopens the Android app and the wrapper transfers the Supabase session into the WebView.
+- Supports both Supabase implicit-token and PKCE-code OAuth returns.
+- Keeps profile, schedule, networking, chat, announcements, sponsors and other ICMGP app pages inside the APK.
+- Supports camera permission for QR scanning.
+- Allows notification/message sounds from the webpage.
+- Uses an ICMGP-style ocean/mercury launcher icon and Android 12+ splash screen.
 
-### 1. Confirm your live web app URL
-
-The Android project currently loads:
-
-`https://ocean.ce22resch01004.workers.dev/`
-
-If your final site URL changes, edit this line in:
-
-`app/src/main/java/com/blueplanet/conference/MainActivity.java`
-
-```java
-private static final String APP_URL = "https://YOUR-DOMAIN/";
-```
-
-### 2. Supabase redirect URL
+## Required Supabase setting
 
 In Supabase open:
 
-Authentication -> URL Configuration -> Redirect URLs
+**Authentication -> URL Configuration -> Redirect URLs**
 
-Add this exact redirect URL:
+Make sure this exact URL exists:
 
 `oceanconference://auth/callback`
 
-Keep your normal HTTPS website URL there as well.
+Keep the normal web app URL there too:
 
-### 3. Google provider
+`https://icmgp-2026-app.vercel.app/`
 
-Keep the normal Google OAuth callback in Google Cloud:
+Google Cloud itself should continue using the normal Supabase callback:
 
 `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
 
-Do NOT put `oceanconference://auth/callback` in Google Cloud. It belongs in Supabase Redirect URLs.
+Do not add the Android custom scheme to Google Cloud; it belongs in Supabase Redirect URLs.
 
-## Build the APK on GitHub for free
+## Google login behavior
 
-1. Create a new GitHub repository.
-2. Upload/push the CONTENTS of this folder to the repository root.
-3. Make sure `.github/workflows/build-android-apk.yml` exists in GitHub.
-4. Open the repository's **Actions** tab.
-5. Select **Build Android APK**.
-6. Click **Run workflow**.
-7. After the green build finishes, open the workflow run.
-8. Under **Artifacts**, download `ocean-conference-debug-apk`.
-9. Unzip it to get `app-debug.apk`.
+Google's credential screen briefly appears in a Chrome Custom Tab. That is intentional and required for secure Google OAuth. When login finishes, the Custom Tab hands control back to the Android app. The attendee app itself should not remain open in Chrome.
 
-The debug APK is automatically signed by Android's debug signing system and is suitable for direct testing/installing.
+## Build APK
 
-## If the workflow does not appear
+Every push to `main` runs **Build Android APK** automatically. You can also run it manually from **Actions -> Build Android APK -> Run workflow**.
 
-Check that the file is exactly here in the repository:
+After the build succeeds, download the artifact named:
 
-`.github/workflows/build-android-apk.yml`
+`icmgp-2026-debug-apk`
 
-A second visible copy is included as `WORKFLOW-COPY-build-android-apk.yml`, but GitHub only recognizes the copy inside `.github/workflows/`.
+Inside it is:
 
-## Android Studio build
+`app-debug.apk`
 
-You can also open the project folder in Android Studio and choose:
+## Current application ID
 
-Build -> Build App Bundle(s) / APK(s) -> Build APK(s)
+`com.blueplanet.conference`
 
-Android Studio will download the required Gradle/SDK components.
-
-## Security
-
-This wrapper does not contain your Supabase service-role key, database password, or Google client secret. It renders your HTTPS website and uses the publishable frontend configuration already hosted with that site.
+It is intentionally unchanged from earlier test APKs so this APK can update the already-installed test app rather than installing as a second application.

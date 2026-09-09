@@ -8,5 +8,8 @@
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowBackground">#EEF8FC</item>
         <item name="android:colorAccent">#0B6FA4</item>
+        <item name="android:windowSplashScreenBackground">#EEF8FC</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_app_logo</item>
+        <item name="android:windowSplashScreenAnimationDuration">250</item>
     </style>
 </resources>
