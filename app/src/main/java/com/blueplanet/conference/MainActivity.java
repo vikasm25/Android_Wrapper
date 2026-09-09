@@ -25,11 +25,7 @@ import java.util.Set;
 
 public class MainActivity extends Activity {
 
-    // The full ICMGP 2026 web app stays inside this WebView.
-    private static final String APP_URL = "https://icmgp-2026-app.vercel.app/";
-
-    // Keep this exact URL in Supabase -> Authentication -> URL Configuration -> Redirect URLs.
-    // The previous wrapper already used this scheme, so existing Supabase configuration remains compatible.
+    private static final String APP_URL = "https://ocean.ce22resch01004.workers.dev/";
     private static final String AUTH_CALLBACK = "oceanconference://auth/callback";
 
     private static final int CAMERA_REQUEST_CODE = 6001;
@@ -81,7 +77,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " ICMGP2026Android/3.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " OceanConferenceAndroid/3.1");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
@@ -108,7 +104,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                view.evaluateJavascript("window.__ICMGP_ANDROID_APP__=true;", null);
+                view.evaluateJavascript("window.__OCEAN_ANDROID_APP__=true;", null);
                 injectSupabaseSessionIfNeeded();
             }
         });
@@ -160,7 +156,6 @@ public class MainActivity extends Activity {
 
         String scheme = uri.getScheme().toLowerCase();
 
-        // OAuth has completed: Android receives the callback and places the session back in the WebView.
         if ("oceanconference".equals(scheme) || "icmgp2026".equals(scheme)) {
             readAuthUri(uri);
             loadConferenceApp();
@@ -175,22 +170,17 @@ public class MainActivity extends Activity {
         String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
         String path = uri.getPath() == null ? "" : uri.getPath();
 
-        // Google OAuth must not run in an embedded WebView. Intercept the Supabase OAuth URL,
-        // replace the webpage redirect with an Android deep link, and open only the login UI in
-        // a secure Chrome Custom Tab. After login Android automatically returns to this activity.
         if (isSupabaseHost(host) && path.contains("/auth/v1/authorize")) {
             Uri oauthUri = replaceQueryParameter(uri, "redirect_to", AUTH_CALLBACK);
             openCustomTab(oauthUri);
             return true;
         }
 
-        // Every page belonging to the attendee app remains inside the Android application.
         Uri appUri = Uri.parse(APP_URL);
         if (appUri.getHost() != null && appUri.getHost().equalsIgnoreCase(host)) {
             return false;
         }
 
-        // Only genuinely external destinations (Maps, sponsor websites, mail, etc.) leave the WebView.
         openExternal(uri);
         return true;
     }
@@ -229,8 +219,7 @@ public class MainActivity extends Activity {
             tabs.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             tabs.launchUrl(this, uri);
         } catch (Exception e) {
-            Intent browser = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(browser);
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
         }
     }
 
@@ -292,7 +281,7 @@ public class MainActivity extends Activity {
             Toast.makeText(this, error, Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(this,
-                    "Google returned to ICMGP 2026, but the Supabase session was missing.",
+                    "Google returned to the app, but the Supabase session was missing.",
                     Toast.LENGTH_LONG).show();
         }
     }
@@ -318,9 +307,6 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    // Chrome/Custom Tabs and Android WebView have separate storage. Once OAuth returns to
-    // Android, place the resulting Supabase session into the WebView's Supabase storage.
-    // Both implicit-token and PKCE-code returns are handled.
     private void injectSupabaseSessionIfNeeded() {
         if (pendingAuthCode == null && (pendingAccessToken == null || pendingRefreshToken == null)) return;
 
